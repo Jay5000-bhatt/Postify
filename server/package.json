@@ -1,7 +1,7 @@
 {
-  "name": "backend_test",
+  "name": "server",
   "version": "1.0.0",
-  "description": "",
+  "description": "Postify Server",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -9,7 +9,7 @@
     "start": "nodemon index.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Jay Bhatt",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^3.0.2",
