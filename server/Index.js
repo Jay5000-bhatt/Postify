@@ -14,7 +14,18 @@ ConnectDB();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors({ origin: "https://postify-nine.vercel.app/" }));
+// Enable CORS for specific domain (your frontend URL)
+const corsOptions = {
+  origin: 'https://postify-nine.vercel.app/', // your frontend URL
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Allowed methods
+  allowedHeaders: 'Content-Type,Authorization', // Allowed headers
+};
+
+app.use(cors(corsOptions)); // Use CORS middleware with the options
+
+app.get('/', (req, res) => {
+  res.send('Hello World');
+});
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
