@@ -8,7 +8,6 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Check for existing token and load user
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("token");

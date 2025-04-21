@@ -6,7 +6,7 @@ import { SlLike } from "react-icons/sl";
 import { SlDislike } from "react-icons/sl";
 
 const Dashboard = () => {
-  const currentUserId = localStorage.getItem("userId"); // or however you store logged-in user
+  const currentUserId = localStorage.getItem("userId"); 
 
   const { posts, setPosts } = useContext(PostContext);
   const [comments, setComments] = useState({});
@@ -102,7 +102,7 @@ const Dashboard = () => {
   };
 
   const handleSubmitComment = async (postId) => {
-    const commentText = comments[postId] || ""; // Get comment text for the specific post
+    const commentText = comments[postId] || "";
 
     if (!commentText.trim()) {
       setError("Please enter a comment.");
@@ -182,7 +182,7 @@ const Dashboard = () => {
                   <h3 className="font-semibold">Comments:</h3>
                   {post.comments.map((comment) => (
                     <div
-                      key={comment._id} // Ensure that each comment has a unique key
+                      key={comment._id} 
                       className="flex justify-between p-2 border-b-2 border-b-gray-400 mt-4 shadow shadow-neutral-50"
                     >
                       <p>{comment.text}</p>
@@ -218,7 +218,7 @@ const Dashboard = () => {
                 <div className="mt-4">
                   <textarea
                     id={post._id}
-                    value={comments[post._id] || ""} // Use specific comment state for each post
+                    value={comments[post._id] || ""} 
                     onChange={(e) =>
                       handleCommentChange(post._id, e.target.value)
                     }
