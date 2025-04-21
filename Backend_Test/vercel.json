@@ -1,21 +1,15 @@
 {
-    "version": 2,
-    "builds": [
-      {
-        "src": "index.js",
-        "use": "@vercel/node"
-      }
-    ],
-    "env": {
-      "NODE_ENV": "production",
-      "MONGODB_URI": "mongodb+srv://bhattjay114:tTbBOxvrg9XGFpSy@cluster0.ffnobhr.mongodb.net/",
-      "JWT_SECRET": "b9b6b7b4c0f0a0c8b0df6e4bc5f7d63e943178f4f38702b2e9dcd34bfb7d539cb23bbda"
-    },
-    "routes": [
-      {
-        "src": "/(.*)",
-        "dest": "/index.js"
-      }
-    ]
-  }
-  
+  "version": 2,
+  "builds": [
+    {
+      "src": "index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.js"
+    }
+  ]
+}
