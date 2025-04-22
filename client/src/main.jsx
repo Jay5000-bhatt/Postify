@@ -6,11 +6,9 @@ import { AuthProvider } from "./Context/AuthContext.jsx";
 import { PostProvider } from "./Context/PostContext.jsx";
 
 createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <AuthProvider>
-      <PostProvider>
-        <App />
-      </PostProvider>
-    </AuthProvider>
-  </React.StrictMode>
+  <AuthProvider>
+    <PostProvider>
+      <App />
+    </PostProvider>
+  </AuthProvider>
 );

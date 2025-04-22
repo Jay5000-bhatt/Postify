@@ -1,16 +1,34 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 import CreatePost from "../Components/CreatePost";
 import PostContext from "../Context/PostContext";
 import { SlLike } from "react-icons/sl";
 import { SlDislike } from "react-icons/sl";
 
 const Dashboard = () => {
-  const currentUserId = localStorage.getItem("userId"); 
-
   const { posts, setPosts } = useContext(PostContext);
   const [comments, setComments] = useState({});
   const [error, setError] = useState("");
+  const [currentUserId, setCurrentUserId] = useState("");
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        setCurrentUserId(decoded.id);
+
+        // console.log("Decoded token payload:", decoded);
+        // console.log("Decoded User ID:", decoded.id);
+      } catch (err) {
+        console.error("Error decoding token:", err);
+      }
+    } else {
+      console.warn("No token found in localStorage");
+    }
+  }, []);
 
   const handlePostReaction = async (postId, type) => {
     try {
@@ -44,7 +62,7 @@ const Dashboard = () => {
       });
 
       setPosts(updatedPosts);
-      console.log(response);
+      console.log(response.data);
     } catch (err) {
       setError("Failed to update reaction.");
       console.error("Error handling post reaction", err);
@@ -110,21 +128,33 @@ const Dashboard = () => {
     }
 
     try {
-      const response = await axios.post(`/api/posts/${postId}/comment`, {
-        text: commentText,
-      });
-      const updatedPosts = posts.map((post) =>
-        post._id === postId
-          ? { ...post, comments: [...post.comments, response.data] }
-          : post
+      const { data: newComment } = await axios.post(
+        `/api/posts/${postId}/comment`,
+        {
+          text: commentText,
+        }
       );
-      await setPosts(updatedPosts);
-      console.log(response.data);
-      setComments((prevComments) => ({
-        ...prevComments,
-        [postId]: "",
-      }));
-      window.location.reload();
+
+      // console.log("New comment response:", newComment);
+
+      newComment.likes = newComment.likes || [];
+      newComment.dislikes = newComment.dislikes || [];
+
+      const updatedPosts = posts.map((post) => {
+        if (post._id === postId) {
+          const updatedPost = {
+            ...post,
+            comments: [...post.comments, newComment],
+          };
+          // console.log("Post updated with new comment:", updatedPost);
+          return updatedPost;
+        }
+        return post;
+      });
+
+      setPosts(updatedPosts);
+      // console.log("Final posts state after comment submit:", updatedPosts);
+      setComments((prev) => ({ ...prev, [postId]: "" }));
     } catch (err) {
       setError("Failed to post comment.");
       console.error("Error posting comment", err);
@@ -138,6 +168,9 @@ const Dashboard = () => {
     }));
   };
 
+  // console.log("currentUserId:", currentUserId);
+  // console.log("Posts:", posts);
+
   return (
     <>
       <div className="mx-10">
@@ -150,91 +183,102 @@ const Dashboard = () => {
 
         <CreatePost />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 min-h-96">
-          {posts.map((post) => {
-            return (
-              <div key={post._id} className="mb-6 p-4 border rounded">
-                <h2>@{post.author.name}</h2>
-                <div className="flex flex-row justify-between">
-                  <h2 className="text-xl font-semibold">{post.title}</h2>
-                  <div className="flex flex-row mt-2 gap-5 mr-4">
-                    <SlLike
-                      onClick={() => handlePostReaction(post._id, "like")}
-                      className={`cursor-pointer text-xl ${
-                        post.likes.includes(currentUserId)
-                          ? "text-emerald-500"
-                          : "text-blue-500"
-                      }`}
+          {currentUserId &&
+            posts.length > 0 &&
+            posts.map((post) => {
+              return (
+                <div key={post._id} className="mb-6 p-4 border rounded">
+                  <h2>@{post.author.name}</h2>
+                  <div className="flex flex-row justify-between">
+                    <h2 className="text-xl font-semibold">{post.title}</h2>
+                    <div className="flex flex-row mt-2 gap-5 mr-4">
+                      <SlLike
+                        onClick={() => handlePostReaction(post._id, "like")}
+                        className={`cursor-pointer text-xl ${
+                          post.likes
+                            .map((id) => id.toString())
+                            .includes(currentUserId.toString())
+                            ? "text-emerald-500"
+                            : "text-blue-500"
+                        }`}
+                      />
+
+                      <SlDislike
+                        onClick={() => handlePostReaction(post._id, "dislike")}
+                        className={`cursor-pointer text-xl ${
+                          post.dislikes
+                            .map((id) => id.toString())
+                            .includes(currentUserId.toString())
+                            ? "text-black"
+                            : "text-red-500"
+                        }`}
+                      />
+                    </div>
+                  </div>
+
+                  <p>{post.content}</p>
+
+                  <div className="mt-4 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                    <h3 className="font-semibold">Comments:</h3>
+                    {post.comments.map((comment) => (
+                      <div
+                        key={comment._id}
+                        className="flex justify-between p-2 border-b-2 border-b-gray-400 mt-4 shadow shadow-neutral-50"
+                      >
+                        <p>{comment.text}</p>
+                        <div className="flex flex-row mt-2 gap-5">
+                          <SlLike
+                            onClick={() =>
+                              handleCommentReaction(
+                                post._id,
+                                comment._id,
+                                "like"
+                              )
+                            }
+                            className={`cursor-pointer text-xl ${
+                              comment.likes.includes(currentUserId)
+                                ? "text-emerald-700"
+                                : "text-cyan-500"
+                            }`}
+                          />
+                          <SlDislike
+                            onClick={() =>
+                              handleCommentReaction(
+                                post._id,
+                                comment._id,
+                                "dislike"
+                              )
+                            }
+                            className={`cursor-pointer text-xl ${
+                              comment.dislikes.includes(currentUserId)
+                                ? "text-black"
+                                : "text-red-500"
+                            }`}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4">
+                    <textarea
+                      id={post._id}
+                      value={comments[post._id] || ""}
+                      onChange={(e) =>
+                        handleCommentChange(post._id, e.target.value)
+                      }
+                      className="w-full p-2 border rounded"
+                      placeholder="Add a comment"
                     />
-                    <SlDislike
-                      onClick={() => handlePostReaction(post._id, "dislike")}
-                      className={`cursor-pointer text-xl ${
-                        post.dislikes.includes(currentUserId)
-                          ? "text-black"
-                          : "text-red-500"
-                      }`}
-                    />
+                    <button
+                      onClick={() => handleSubmitComment(post._id)}
+                      className="mt-2 px-4 py-2 bg-blue-500 text-white rounded"
+                    >
+                      Submit Comment
+                    </button>
                   </div>
                 </div>
-
-                <p>{post.content}</p>
-
-                <div className="mt-4 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
-                  <h3 className="font-semibold">Comments:</h3>
-                  {post.comments.map((comment) => (
-                    <div
-                      key={comment._id} 
-                      className="flex justify-between p-2 border-b-2 border-b-gray-400 mt-4 shadow shadow-neutral-50"
-                    >
-                      <p>{comment.text}</p>
-                      <div className="flex flex-row mt-2 gap-5">
-                        <SlLike
-                          onClick={() =>
-                            handleCommentReaction(post._id, comment._id, "like")
-                          }
-                          className={`cursor-pointer text-xl ${
-                            comment.likes.includes(currentUserId)
-                              ? "text-emerald-700"
-                              : "text-cyan-500"
-                          }`}
-                        />
-                        <SlDislike
-                          onClick={() =>
-                            handleCommentReaction(
-                              post._id,
-                              comment._id,
-                              "dislike"
-                            )
-                          }
-                          className={`cursor-pointer text-xl ${
-                            comment.dislikes.includes(currentUserId)
-                              ? "text-black"
-                              : "text-red-500"
-                          }`}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4">
-                  <textarea
-                    id={post._id}
-                    value={comments[post._id] || ""} 
-                    onChange={(e) =>
-                      handleCommentChange(post._id, e.target.value)
-                    }
-                    className="w-full p-2 border rounded"
-                    placeholder="Add a comment"
-                  />
-                  <button
-                    onClick={() => handleSubmitComment(post._id)}
-                    className="mt-2 px-4 py-2 bg-blue-500 text-white rounded"
-                  >
-                    Submit Comment
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
         </div>
       </div>
     </>
