@@ -1,5 +1,4 @@
-// src/context/PostContext.jsx
-import React, { createContext,  useState, useEffect } from "react";
+import React, { createContext, useState, useEffect } from "react";
 import axios from "axios";
 
 const PostContext = createContext();
@@ -8,16 +7,20 @@ export const PostProvider = ({ children }) => {
   const [posts, setPosts] = useState([]);
 
   const fetchPosts = async () => {
-    try {
-      const res = await axios.get("/api/posts");
-      setPosts(res.data);
-    } catch (err) {
-      console.error("Error fetching posts:", err);
+    const token = localStorage.getItem("token");
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      try {
+        const response = await axios.get("/api/posts");
+        setPosts(response.data.data);
+      } catch (err) {
+        console.error("Error fetching posts", err);
+      }
     }
   };
 
   const addPost = (newPost) => {
-    setPosts((prev) => [newPost, ...prev]);
+    setPosts((prevPosts) => [newPost, ...prevPosts]);
   };
 
   useEffect(() => {

@@ -7,7 +7,8 @@ import { SlLike } from "react-icons/sl";
 import { SlDislike } from "react-icons/sl";
 
 const Dashboard = () => {
-  const { posts, setPosts } = useContext(PostContext);
+  const { posts, setPosts, fetchPosts } = useContext(PostContext);
+
   const [comments, setComments] = useState({});
   const [error, setError] = useState("");
   const [currentUserId, setCurrentUserId] = useState("");
@@ -19,9 +20,6 @@ const Dashboard = () => {
       try {
         const decoded = jwtDecode(token);
         setCurrentUserId(decoded.id);
-
-        // console.log("Decoded token payload:", decoded);
-        // console.log("Decoded User ID:", decoded.id);
       } catch (err) {
         console.error("Error decoding token:", err);
       }
@@ -70,6 +68,10 @@ const Dashboard = () => {
   };
 
   const handleCommentReaction = async (postId, commentId, type) => {
+    console.log("Post ID:", postId);
+    console.log("Comment ID:", commentId);
+    console.log("Reaction Type:", type);
+
     try {
       const response = await axios.post(
         `/api/posts/${postId}/comment/${commentId}/reaction`,
@@ -128,32 +130,11 @@ const Dashboard = () => {
     }
 
     try {
-      const { data: newComment } = await axios.post(
-        `/api/posts/${postId}/comment`,
-        {
-          text: commentText,
-        }
-      );
-
-      // console.log("New comment response:", newComment);
-
-      newComment.likes = newComment.likes || [];
-      newComment.dislikes = newComment.dislikes || [];
-
-      const updatedPosts = posts.map((post) => {
-        if (post._id === postId) {
-          const updatedPost = {
-            ...post,
-            comments: [...post.comments, newComment],
-          };
-          // console.log("Post updated with new comment:", updatedPost);
-          return updatedPost;
-        }
-        return post;
+      await axios.post(`/api/posts/${postId}/comment`, {
+        text: commentText,
       });
 
-      setPosts(updatedPosts);
-      // console.log("Final posts state after comment submit:", updatedPosts);
+      await fetchPosts();
       setComments((prev) => ({ ...prev, [postId]: "" }));
     } catch (err) {
       setError("Failed to post comment.");
@@ -167,10 +148,6 @@ const Dashboard = () => {
       [postId]: value,
     }));
   };
-
-  // console.log("currentUserId:", currentUserId);
-  // console.log("Posts:", posts);
-
   return (
     <>
       <div className="mx-10">
@@ -182,103 +159,127 @@ const Dashboard = () => {
         {error && <p className="text-red-500">{error}</p>}
 
         <CreatePost />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 min-h-96">
+        <div className="space-y-8">
           {currentUserId &&
             posts.length > 0 &&
-            posts.map((post) => {
-              return (
-                <div key={post._id} className="mb-6 p-4 border rounded">
-                  <h2>@{post.author.name}</h2>
-                  <div className="flex flex-row justify-between">
-                    <h2 className="text-xl font-semibold">{post.title}</h2>
-                    <div className="flex flex-row mt-2 gap-5 mr-4">
-                      <SlLike
-                        onClick={() => handlePostReaction(post._id, "like")}
-                        className={`cursor-pointer text-xl ${
-                          post.likes
-                            .map((id) => id.toString())
-                            .includes(currentUserId.toString())
-                            ? "text-emerald-500"
-                            : "text-blue-500"
-                        }`}
-                      />
+            posts.map((post) => (
+              <div
+                key={post._id}
+                className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-100"
+              >
+                <h2 className="text-sky-700 text-lg">@{post.author.name}</h2>
+                <h3 className="text-2xl font-bold text-gray-900 mt-1">
+                  {post.title}
+                </h3>
+                <p className="text-gray-800 mt-4 whitespace-pre-line">
+                  {post.content}
+                </p>
 
-                      <SlDislike
-                        onClick={() => handlePostReaction(post._id, "dislike")}
-                        className={`cursor-pointer text-xl ${
-                          post.dislikes
-                            .map((id) => id.toString())
-                            .includes(currentUserId.toString())
-                            ? "text-black"
-                            : "text-red-500"
-                        }`}
-                      />
-                    </div>
-                  </div>
-
-                  <p>{post.content}</p>
-
-                  <div className="mt-4 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
-                    <h3 className="font-semibold">Comments:</h3>
-                    {post.comments.map((comment) => (
-                      <div
-                        key={comment._id}
-                        className="flex justify-between p-2 border-b-2 border-b-gray-400 mt-4 shadow shadow-neutral-50"
-                      >
-                        <p>{comment.text}</p>
-                        <div className="flex flex-row mt-2 gap-5">
-                          <SlLike
-                            onClick={() =>
-                              handleCommentReaction(
-                                post._id,
-                                comment._id,
-                                "like"
-                              )
-                            }
-                            className={`cursor-pointer text-xl ${
-                              comment.likes.includes(currentUserId)
-                                ? "text-emerald-700"
-                                : "text-cyan-500"
-                            }`}
-                          />
-                          <SlDislike
-                            onClick={() =>
-                              handleCommentReaction(
-                                post._id,
-                                comment._id,
-                                "dislike"
-                              )
-                            }
-                            className={`cursor-pointer text-xl ${
-                              comment.dislikes.includes(currentUserId)
-                                ? "text-black"
-                                : "text-red-500"
-                            }`}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-4">
-                    <textarea
-                      id={post._id}
-                      value={comments[post._id] || ""}
-                      onChange={(e) =>
-                        handleCommentChange(post._id, e.target.value)
-                      }
-                      className="w-full p-2 border rounded"
-                      placeholder="Add a comment"
+                <div className="mt-4 flex items-center gap-6">
+                  <button
+                    onClick={() => handlePostReaction(post._id, "like")}
+                    className="flex items-center gap-2 text-blue-600 hover:text-emerald-600 transition duration-200 cursor-pointer"
+                  >
+                    <SlLike
+                      className={`text-xl transition duration-150 ${
+                        post.likes.includes(currentUserId)
+                          ? "text-emerald-600 scale-110"
+                          : "text-blue-500"
+                      }`}
                     />
-                    <button
-                      onClick={() => handleSubmitComment(post._id)}
-                      className="mt-2 px-4 py-2 bg-blue-500 text-white rounded"
-                    >
-                      Submit Comment
-                    </button>
+                    <span>{post.likes.length}</span>
+                  </button>
+                  <button
+                    onClick={() => handlePostReaction(post._id, "dislike")}
+                    className="flex items-center gap-2 text-red-500 hover:text-black transition duration-200 cursor-pointer"
+                  >
+                    <SlDislike
+                      className={`text-xl transition duration-150 ${
+                        post.dislikes.includes(currentUserId)
+                          ? "text-black scale-110"
+                          : "text-red-500"
+                      }`}
+                    />
+                    <span>{post.dislikes.length}</span>
+                  </button>
+                </div>
+
+                <div className="mt-6">
+                  <h4 className="font-semibold text-lg text-gray-800">
+                    Comments:
+                  </h4>
+                  <div className="space-y-4 mt-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                    {[...post.comments]
+                      .sort(
+                        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+                      )
+                      .map((comment) => (
+                        <div
+                          key={comment._id}
+                          className="flex justify-between items-start p-3 bg-gray-50 border border-gray-200 rounded-lg shadow-sm"
+                        >
+                          <p className="text-gray-700">{comment.text}</p>
+                          <div className="flex gap-4">
+                            <button
+                              onClick={() =>
+                                handleCommentReaction(
+                                  post._id,
+                                  comment._id,
+                                  "like"
+                                )
+                              }
+                              className="text-cyan-500 hover:text-emerald-600 transition cursor-pointer"
+                            >
+                              <SlLike
+                                className={`text-xl ${
+                                  comment.likes.includes(currentUserId)
+                                    ? "text-emerald-600 scale-110"
+                                    : ""
+                                }`}
+                              />
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleCommentReaction(
+                                  post._id,
+                                  comment._id,
+                                  "dislike"
+                                )
+                              }
+                              className="text-red-500 hover:text-black transition cursor-pointer"
+                            >
+                              <SlDislike
+                                className={`text-xl ${
+                                  comment.dislikes.includes(currentUserId)
+                                    ? "text-black scale-110"
+                                    : ""
+                                }`}
+                              />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                   </div>
                 </div>
-              );
-            })}
+
+                <div className="mt-4">
+                  <textarea
+                    value={comments[post._id] || ""}
+                    onChange={(e) =>
+                      handleCommentChange(post._id, e.target.value)
+                    }
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400"
+                    placeholder="Write a comment..."
+                  />
+                  <button
+                    onClick={() => handleSubmitComment(post._id)}
+                    className="mt-2 px-5 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition"
+                  >
+                    Submit Comment
+                  </button>
+                </div>
+              </div>
+            ))}
         </div>
       </div>
     </>

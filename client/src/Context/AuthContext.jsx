@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect } from "react";
 import axios from "axios";
 
 const AuthContext = createContext();
@@ -27,9 +27,11 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const { data } = await axios.post("/api/auth/login", { email, password });
-    localStorage.setItem("token", data.token);
-    setUser(data.user);
-    axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
+
+    const { token, user } = data.data;
+    localStorage.setItem("token", token);
+    setUser(user);
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
   };
 
   const signup = async (name, email, password) => {
@@ -38,9 +40,11 @@ export const AuthProvider = ({ children }) => {
       email,
       password,
     });
-    localStorage.setItem("token", data.token);
-    setUser(data.user);
-    axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
+
+    const { token, user } = data.data;
+    localStorage.setItem("token", token);
+    setUser(user);
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
   };
 
   const logout = () => {
