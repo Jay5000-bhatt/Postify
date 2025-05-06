@@ -11,7 +11,6 @@ const successResponse = (res, statusCode, message, data = {}) => {
   return res.status(statusCode).json({ success: true, message, data });
 };
 
-// Signup
 export const signup = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -45,7 +44,6 @@ export const signup = async (req, res) => {
   }
 };
 
-// Login
 export const login = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -77,8 +75,6 @@ export const login = async (req, res) => {
   }
 };
 
-
-// Get Profile
 export const getProfile = async (req, res) => {
   try {
     if (!req.user) {

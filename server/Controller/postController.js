@@ -9,7 +9,6 @@ const successResponse = (res, statusCode, message, data = {}) => {
   return res.status(statusCode).json({ success: true, message, data });
 };
 
-// POST /api/posts
 export const createPost = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -39,16 +38,13 @@ export const createPost = async (req, res) => {
   }
 };
 
-// GET /api/posts
 export const getAllPosts = async (req, res) => {
   try {
-    // Get posts and populate author
     const posts = await Post.find()
       .populate("author", "name email")
-      .lean() // use .lean() to allow direct object manipulation
-      .sort({ createdAt: -1 }); // Sort posts by createdAt descending (most recent first)
-
-    // Sort each post's comments by createdAt descending
+      .lean()
+      .sort({ createdAt: -1 }); 
+ 
     const postsWithSortedComments = posts.map((post) => {
       const sortedComments = [...post.comments].sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
@@ -71,7 +67,6 @@ export const getAllPosts = async (req, res) => {
   }
 };
 
-// POST /api/posts/:id/comments
 export const addComment = async (req, res) => {
   const { text } = req.body;
 
@@ -87,8 +82,8 @@ export const addComment = async (req, res) => {
     await post.save();
 
     const updatedPost = await Post.findById(req.params.id)
-      .populate("author", "name") // if needed
-      .populate("comments.user", "name"); // populate comment authors
+      .populate("author", "name") 
+      .populate("comments.user", "name");
 
     return successResponse(res, 200, "Comment added", updatedPost);
   } catch (err) {
@@ -96,8 +91,6 @@ export const addComment = async (req, res) => {
   }
 };
 
-
-// POST /api/posts/:id/react
 export const toggleReaction = async (req, res) => {
   const { type } = req.body;
   const userId = req.user._id;
@@ -126,7 +119,6 @@ export const toggleReaction = async (req, res) => {
   }
 };
 
-// POST /api/posts/:postId/comments/:commentId/react
 export const toggleCommentReaction = async (req, res) => {
   const { type } = req.body;
   const { postId, commentId } = req.params;
