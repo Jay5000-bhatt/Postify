@@ -20,15 +20,13 @@ const Dashboard = () => {
       try {
         const decoded = jwtDecode(token);
         setCurrentUserId(decoded.id);
-
-        fetchPosts();
       } catch (err) {
         console.error("Error decoding token:", err);
       }
     } else {
       console.warn("No token found in localStorage");
     }
-  }, [fetchPosts]);
+  }, []);
 
   const handlePostReaction = async (postId, type) => {
     try {
