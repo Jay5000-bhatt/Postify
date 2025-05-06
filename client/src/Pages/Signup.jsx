@@ -13,7 +13,7 @@ const Signup = () => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token && isTokenValid()) {
-      navigate("/dashboard"); // Redirect to dashboard if token is valid
+      navigate("/dashboard");
     }
   }, [navigate]);
   

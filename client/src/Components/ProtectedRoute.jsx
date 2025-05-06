@@ -1,4 +1,3 @@
-// components/ProtectedRoute.jsx
 import { Navigate } from "react-router-dom";
 import isTokenValid  from "../Utils/Auth";
 

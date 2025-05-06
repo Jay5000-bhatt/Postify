@@ -61,9 +61,7 @@ const Login = () => {
         </div>
 
         <div className="mt-10 flex flex-col justify-center">
-          {/* Form */}
           <form onSubmit={formik.handleSubmit} className="space-y-6">
-            {/* Email */}
             <div>
               <label
                 htmlFor="email"
@@ -90,7 +88,6 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Password */}
             <div>
               <label
                 htmlFor="password"
@@ -117,7 +114,6 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Submit Button */}
             <div>
               <button
                 type="submit"
@@ -128,7 +124,6 @@ const Login = () => {
               </button>
             </div>
 
-            {/* Server-side error */}
             {formik.status && (
               <p className="text-center text-sm text-red-500">
                 {formik.status}
@@ -136,7 +131,6 @@ const Login = () => {
             )}
           </form>
 
-          {/* Navigation */}
           <p className="mt-10 text-center text-sm/6 text-gray-500">
             Not a member? &nbsp;
             <a

@@ -130,11 +130,10 @@ const CreatePost = () => {
                 className="w-full"
                 disabled={loading}
               >
-                {loading ? "Creating..." : "Create Post"} {/* Loading text */}
+                {loading ? "Creating..." : "Create Post"}
               </Button>
             </div>
 
-            {/* Display server-side errors */}
             {error && (
               <p className="mt-4 text-center text-sm text-red-500">{error}</p>
             )}
