@@ -237,6 +237,7 @@ const Dashboard = () => {
                                     : ""
                                 }`}
                               />
+                              <span>{comment.likes.length}</span>
                             </button>
                             <button
                               onClick={() =>
@@ -255,6 +256,7 @@ const Dashboard = () => {
                                     : ""
                                 }`}
                               />
+                              <span>{comment.dislikes.length}</span>
                             </button>
                           </div>
                         </div>

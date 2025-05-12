@@ -3,11 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import AuthContext from "../Context/AuthContext";
+import PostContext from "../Context/PostContext";
+
 import MainLogo from "../assets/Main_Logo.png";
 import isTokenValid from "../Utils/Auth";
 
 const Login = () => {
   const { login } = useContext(AuthContext);
+  const { fetchPosts } = useContext(PostContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,6 +36,8 @@ const Login = () => {
     onSubmit: async (values, { setSubmitting, setStatus }) => {
       try {
         await login(values.email, values.password);
+        await fetchPosts();
+
         navigate("/dashboard");
       } catch (error) {
         if (error.response?.data?.message) {
